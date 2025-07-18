@@ -1,0 +1,6 @@
+@Stock_Portfolio_Management_HostAddress = http://localhost:5183
+
+GET {{Stock_Portfolio_Management_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
