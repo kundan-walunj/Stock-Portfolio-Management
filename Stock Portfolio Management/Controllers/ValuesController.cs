@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Stock_Portfolio_Management.Data;
 using Stock_Portfolio_Management.Model;
+using Stock_Portfolio_Management.Repositories;
 
 namespace Stock_Portfolio_Management.Controllers
 {
@@ -10,25 +13,33 @@ namespace Stock_Portfolio_Management.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        private readonly IMongoCollection<Stock>? _stocks;
+        private readonly IValuesRepo _valuesRepo;
+        private readonly IMapper _mapper;
 
-        public ValuesController(MongoDbService mongoDbService)
+        public ValuesController(IValuesRepo valuesRepo, IMapper mapper)
         {
-            _stocks = mongoDbService.Database?.GetCollection<Stock>("stocks");
-
+            _valuesRepo = valuesRepo;
+            _mapper = mapper;
         }
         [HttpGet]
         public async Task<ActionResult<List<Stock>>> GetStocks()
         {
-            var result = await _stocks.Find(_ => true).ToListAsync();
-            return Ok(result);
+            var result = await _valuesRepo.GetStocksAsync();
+            var Tostocksdto= _mapper.Map<List<StocksDto>>(result);
+            return Ok(Tostocksdto);
         }
 
         [HttpGet("{id}")]
          public async Task<ActionResult<Stock>> GetSingle([FromRoute]string id)
-        {   
-            var GetStock= await _stocks.Find(x => x.Id == id).FirstOrDefaultAsync();    
-            return Ok(GetStock);
+        {
+            
+            var GetStock= await _valuesRepo.GetSingleAsync(id); 
+            if (GetStock == null)
+            {
+                return NotFound();  
+            }
+            var Tostocksdto = _mapper.Map<StocksDto>(GetStock);
+            return Ok(Tostocksdto);
         }
        
 
@@ -36,19 +47,20 @@ namespace Stock_Portfolio_Management.Controllers
         public async Task<ActionResult> InsertStock([FromBody] StocksDto Inputstock)
         {
 
-            var NewStock = new Stock
-            {
-           
-                Symbol = Inputstock.Symbol,
-                BuyPrice = Inputstock.BuyPrice,
-                CurrentPrice = Inputstock.CurrentPrice,
-                Quantity = Inputstock.Quantity
+            //var NewStock = new Stock
+            //{
+
+            //    Symbol = Inputstock.Symbol,
+            //    BuyPrice = Inputstock.BuyPrice,
+            //    CurrentPrice = Inputstock.CurrentPrice,
+            //    Quantity = Inputstock.Quantity
 
 
-            };
-
-            await _stocks.InsertOneAsync(NewStock);
-           return CreatedAtAction(nameof(GetSingle),new { id=NewStock.Id},NewStock);      
+            //};
+            var NewStock=_mapper.Map<Stock>(Inputstock);
+            var value = await _valuesRepo.InsertStockAsync(NewStock);
+            var Tostocksdto = _mapper.Map<StocksDto>(value);
+            return CreatedAtAction(nameof(GetSingle),new { id=value.Id},Tostocksdto);      
         }
 
         [HttpPut("{id}")]
@@ -56,12 +68,21 @@ namespace Stock_Portfolio_Management.Controllers
         public async Task<ActionResult> UpdateStock([FromRoute] string id, [FromBody] StocksDto stocksDto)
         {
 
-            var filter = Builders<Stock>.Filter.Eq(s=>s.Id,id);
-            var update = Builders<Stock>.Update.Set(s => s.BuyPrice, stocksDto.BuyPrice)
-                .Set(s => s.Quantity, stocksDto.Quantity);
-           
-            var result = await _stocks.UpdateOneAsync(filter,update);
-            return Ok(result);
+
+            //var Updatestock = new Stock
+            //{
+            //    Id = id,
+            //    Symbol = stocksDto.Symbol,
+            //    BuyPrice = stocksDto.BuyPrice,
+            //    CurrentPrice = stocksDto.CurrentPrice,
+            //    Quantity =stocksDto.Quantity
+
+
+            //};
+            var Updatestock=_mapper.Map<Stock>(stocksDto);  
+            var result = await _valuesRepo.UpdateStockAsync(id, Updatestock);
+            var Tostocksdto = _mapper.Map<StocksDto>(result);
+            return Ok(Tostocksdto);
            
         }
 
@@ -69,9 +90,10 @@ namespace Stock_Portfolio_Management.Controllers
 
         public async Task<ActionResult> DeleteStock([FromRoute] string id)
         {
-            var filter = Builders<Stock>.Filter.Eq(s => s.Id, id);
-            var result = await _stocks.DeleteOneAsync(filter);
-            return Ok(result);
+          
+            var result = await _valuesRepo.DeleteStockAsync(id);
+            var Tostocksdto = _mapper.Map<StocksDto>(result);
+            return Ok(Tostocksdto);
         }
 
 
