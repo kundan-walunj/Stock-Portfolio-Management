@@ -1,8 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
+using AutoMapper;
 using Stock_Portfolio_Management.Data;
 using Stock_Portfolio_Management.Mapper;
 using Stock_Portfolio_Management.Repositories;
-
+using AutoMapper.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,7 +12,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<MongoDbService>();
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 builder.Services.AddScoped<IValuesRepo, MongoValuesRepo>();
 
 var app = builder.Build();
