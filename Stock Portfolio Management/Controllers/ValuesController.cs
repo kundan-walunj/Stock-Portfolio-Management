@@ -25,8 +25,8 @@ namespace Stock_Portfolio_Management.Controllers
         public async Task<ActionResult<List<Stock>>> GetStocks()
         {
             var result = await _valuesRepo.GetStocksAsync();
-            var Tostocksdto= _mapper.Map<List<StocksDto>>(result);
-            return Ok(Tostocksdto);
+            //var Tostocksdto= _mapper.Map<List<StocksDto>>(result);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -38,8 +38,8 @@ namespace Stock_Portfolio_Management.Controllers
             {
                 return NotFound();  
             }
-            var Tostocksdto = _mapper.Map<StocksDto>(GetStock);
-            return Ok(Tostocksdto);
+            //var Tostocksdto = _mapper.Map<StocksDto>(GetStock);
+            return Ok(GetStock);
         }
        
 
